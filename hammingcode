@@ -1,0 +1,279 @@
+import hammingcode as hc
+from tkinter import *
+master = Tk()
+e=StringVar()
+
+var=IntVar()
+def init():
+    global x
+    global Err
+    global InfoCode
+    global ErrPos
+    x=0
+    Err=[]
+    ErrPos=[]
+    InfoCode=[]
+
+def selection():
+    global IsOdd
+    IsOdd=var.get()
+    print(IsOdd)
+    return(IsOdd)
+def startcorrect():
+    global x
+    global Err
+    global ErrPos
+    global InfoCode
+    global IsOdd
+    print(e1.get())
+    h=list(e1.get())
+    h=list(map(int,h))
+    print(h)
+    (x,Err,ErrPos,InfoCode)=hc.hammingCodeCorrect(h,IsOdd)
+
+    print(x)
+
+    text1.insert(INSERT,x)
+    text2.insert(INSERT,Err)
+    text3.insert(INSERT,ErrPos)
+    text4.insert(INSERT,InfoCode)
+
+    print(x)
+
+init()   
+master.geometry('%dx%d' % (500, 400))
+Label(master, text="请输入有错的海明码:").grid(sticky=W,pady=10)
+Label(master, text="选择校验方式:").grid(sticky=W,pady=10)
+Label(master, text="校验码位数:").grid(sticky=W,pady=10)
+Label(master, text="累加器的值:").grid(sticky=W,pady=10)
+Label(master, text="错误位置:").grid(sticky=W,pady=10)
+Label(master, text="源码结果:").grid(sticky=W,pady=10)
+button1 = Button(master, text='开始纠正',command=startcorrect)
+button1.grid(row=3, column=2)
+
+e1 = Entry(master,width=40)
+e1.grid(row=0, column=1,padx=(5,5),pady=10,ipady=1)
+    
+    
+R1 = Radiobutton(master, text="奇校验", variable=var, value=1,command=selection)
+R1.grid(row=1,column=1)
+R2 = Radiobutton(master, text="偶校验", variable=var, value=0,command=selection)
+R2.grid(row=1,column=2)
+
+        
+   
+text1 = Text(master, width=40, height=2)
+text1.grid(row=2,column=1)
+
+text2 = Text(master, width=40, height=2)
+text2.grid(row=3,column=1)
+text3 = Text(master, width=40, height=2)
+text3.grid(row=4,column=1)
+text4 = Text(master, width=40, height=2)
+text4.grid(row=5,column=1)
+mainloop()
+
+
+
+
+    
+
+    
+import numpy as np
+def hammingCode(SourceCode,IsOdd):
+    #计算校验码位数x
+    K=len(SourceCode)
+    x=0
+    while True:
+        if (pow(2,x)-x)>K+1:
+            break
+        x+=1
+    #初始化海明码
+    HammingCode=np.zeros(K+x)
+    #计算校验码位置
+    tmp=pow(2,np.arange(0,x))
+    #tmp1=HamingCode.tolist()
+    CodePos=tmp-1
+    j=0
+    for i in range(0,K+x):
+        if i in CodePos:
+            continue
+        HammingCode[i]=SourceCode[j]
+        j=j+1
+    print(HammingCode)
+    print(CodePos+1)
+    tmp1=[]
+    #IsOdd值为1时为奇校验，值为0时为偶校验
+    #计算校验码数值
+    if(IsOdd):      
+        for num in range(0,x):
+            tmp1=np.zeros(K+x)
+            list1=[]
+            for i in range(tmp[num],K+x+1):
+                #找到所需校验的位置
+                if(int(i/tmp[num])%2==1):
+                  tmp1[i-1]=HammingCode[i-1]
+                  list1.append(i)
+            print(list1)
+            HammingCode[CodePos[num]]=abs(str(tmp1.tolist()).count("1")%2-1)
+        
+    else:
+        for num in range(0,x):
+            tmp1=np.zeros(K+x)
+            list1=[]
+            for i in range(tmp[num],K+x+1):
+                #找到所需校验的位置
+                if(int(i/tmp[num])%2==1):
+                  tmp1[i-1]=HammingCode[i-1]
+                  list1.append(i)
+            print(list1)
+            HammingCode[CodePos[num]]=str(tmp1.tolist()).count("1")%2
+            print(HammingCode[CodePos[num]])   
+    tmp1=HammingCode[tmp-1]
+    return(x,tmp,tmp1,HammingCode)
+    
+def hammingCodeCorrect(WrongCode,IsOdd):
+    #WrongCode=[1,1,0,1,0,1,0,0,1,0,1,0]
+    N=len(WrongCode)
+    #计算位数
+    x=0
+    while True:
+        if (pow(2,x))>N+1:
+            break
+        x+=1
+    K=N-x
+    CorrectCode=WrongCode
+    tmp=pow(2,np.arange(0,x))
+    #tmp1记录每一个校验码校验位组的结果
+    Err=np.zeros(x)
+    ErrorPos=0
+    if(IsOdd):
+        for num in range(0,x):
+            list1=[]
+            for i in range(tmp[num],K+x+1):
+                #找到校验码对应校验位置
+                if(int(i/tmp[num])%2==1):
+                  list1.append(i)
+            for j in range(0,len(list1)):
+                Err[num]=int(Err[num])^int(WrongCode[list1[j]-1])
+        Err=1-Err
+        #print(Err)           
+        ErrorPos=sum(np.multiply(Err,pow(2,np.arange(0,x))))
+        #print(ErrorPos)
+        CorrectCode[int(ErrorPos-1)]=1-WrongCode[int(ErrorPos-1)]
+       # print(CorrectCode)
+        for num in range(0,x):
+            del CorrectCode[tmp[x-num-1]-1]
+        InfoCode=CorrectCode
+        #print(InfoCode)
+    else:
+        for num in range(0,x):
+            list1=[]
+            for i in range(tmp[num],K+x+1):
+                #找到校验码对应校验位置
+                if(int(i/tmp[num])%2==1):
+                  list1.append(i)
+            for j in range(0,len(list1)):
+                Err[num]=int(Err[num])^int(WrongCode[list1[j]-1])
+       # print(Err)           
+        ErrorPos=sum(np.multiply(Err,pow(2,np.arange(0,x))))
+        #print(ErrorPos)
+        CorrectCode[int(ErrorPos-1)]=1-WrongCode[int(ErrorPos-1)]
+       # print(CorrectCode)
+        for num in range(0,x):
+            del CorrectCode[tmp[x-num-1]-1]
+        InfoCode=CorrectCode
+       # print(InfoCode)
+    return(x,Err,ErrorPos,InfoCode)
+    
+(a,b,c,d)=hammingCodeCorrect([0,0,1,0,0,1,0,0,1,0,1,0],1)
+
+    
+        
+            
+        
+        
+    
+    
+        
+    
+import hammingcode as hc
+from tkinter import *
+master = Tk()
+e=StringVar()
+
+var=IntVar()
+def init():
+    global x
+    global tmp
+    global tmp1
+    global HammingCode
+    x=0
+    tmp=[]
+    tmp1=[]
+    HammingCode=[]
+
+def selection():
+    global IsOdd
+    IsOdd=var.get()
+    print(IsOdd)
+    return(IsOdd)
+def startcoding():
+    global x
+    global tmp
+    global tmp1
+    global HammingCode
+    global IsOdd
+    print(e1.get())
+    h=list(e1.get())
+    (x,tmp,tmp1,HammingCode)=hc.hammingCode(h,IsOdd)
+
+    text1.insert(INSERT,x)
+    text2.insert(INSERT,tmp)
+    text3.insert(INSERT,tmp1)
+    text4.insert(INSERT,HammingCode)
+
+    print(h)
+    print(x)
+    print(HammingCode)
+init()   
+master.geometry('%dx%d' % (500, 400))
+Label(master, text="请输入原信息码:").grid(sticky=W,pady=10)
+Label(master, text="选择校验方式:").grid(sticky=W,pady=10)
+Label(master, text="校验码位数:").grid(sticky=W,pady=10)
+Label(master, text="校验码位置:").grid(sticky=W,pady=10)
+Label(master, text="校验位的值:").grid(sticky=W,pady=10)
+Label(master, text="海明码编码结果:").grid(sticky=W,pady=10)
+button1 = Button(master, text='开始编码',command=startcoding)
+button1.grid(row=3, column=2)
+button2 = Button(master, text='演示纠错')
+button2.grid(row=4, column=2)
+e1 = Entry(master,width=40)
+e1.grid(row=0, column=1,padx=(5,5),pady=10,ipady=1)
+    
+    
+R1 = Radiobutton(master, text="奇校验", variable=var, value=1,command=selection)
+R1.grid(row=1,column=1)
+R2 = Radiobutton(master, text="偶校验", variable=var, value=0,command=selection)
+R2.grid(row=1,column=2)
+
+        
+   
+text1 = Text(master, width=40, height=2)
+text1.grid(row=2,column=1)
+
+text2 = Text(master, width=40, height=2)
+text2.grid(row=3,column=1)
+text3 = Text(master, width=40, height=2)
+text3.grid(row=4,column=1)
+text4 = Text(master, width=40, height=2)
+text4.grid(row=5,column=1)
+mainloop()
+
+
+
+
+
+    
+
+    
